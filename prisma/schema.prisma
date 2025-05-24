@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String?  @unique
+  username  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Authentication providers
+  authProviders AuthProvider[]
+
+  @@map("users")
+}
+
+model AuthProvider {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String   @db.ObjectId
+  provider          String   // "facebook", "instagram", "twitter"
+  providerId        String   // User ID from the provider
+  username          String?  // Provider-specific username
+  email             String?  // Provider-specific email
+  accessToken       String
+  refreshToken      String?
+  expiresAt         DateTime?
+  advertisingAccountId String? // Ad account ID for business accounts
+  businessAccounts  Json?    // Store business account data as JSON
+  adAccounts        Json?    // Store ad account data as JSON
+  configId          String?  // Facebook Business Config ID
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relation to User
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Compound unique index for provider and providerId
+  @@unique([provider, providerId])
+  // Index for quick lookups
+  @@index([userId])
+  @@index([provider])
+  @@index([advertisingAccountId])
+  
+  @@map("auth_providers")
+}
