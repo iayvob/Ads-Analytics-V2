@@ -178,7 +178,8 @@ export class OAuthService {
   }
 
   static buildInstagramAuthUrl(state: string, redirectUri: string): string {
-    const authUrl = new URL("https://api.instagram.com/oauth/authorize")
+    const authUrl = new URL("https://api.instagram.com/oauth/authorize");
+
     authUrl.searchParams.set("client_id", env.INSTAGRAM_APP_ID)
     authUrl.searchParams.set("redirect_uri", redirectUri)
     authUrl.searchParams.set("scope", OAUTH_SCOPES.INSTAGRAM)
@@ -188,16 +189,36 @@ export class OAuthService {
     return authUrl.toString()
   }
 
-  static buildTwitterAuthUrl(state: string, redirectUri: string, codeChallenge: string): string {
-    const authUrl = new URL("https://twitter.com/i/oauth2/authorize")
-    authUrl.searchParams.set("response_type", "code")
-    authUrl.searchParams.set("client_id", env.TWITTER_CLIENT_ID)
-    authUrl.searchParams.set("redirect_uri", redirectUri)
-    authUrl.searchParams.set("scope", OAUTH_SCOPES.TWITTER)
-    authUrl.searchParams.set("state", state)
-    authUrl.searchParams.set("code_challenge", codeChallenge)
-    authUrl.searchParams.set("code_challenge_method", "S256")
+  static buildTwitterAuthUrl(
+    state: string,
+    redirectUri: string,
+    codeChallenge: string
+  ): string {
+    // 1) Collapse any “//” in the path portion of the URI to a single “/”
+    const normalizeRedirect = redirectUri.replace(/([^:]\/)\/+/g, '$1');
+    console.log("redirect URI:", redirectUri);
 
-    return authUrl.toString()
+    console.log("Normalized redirect URI:", normalizeRedirect);
+
+    // 2) Define your params in a plain object
+    const params: Record<string, string> = {
+      client_id: env.TWITTER_CLIENT_ID,
+      scope: OAUTH_SCOPES.TWITTER,       // e.g. "users.read tweet.read offline.access"
+      response_type: 'code',
+      redirect_uri: normalizeRedirect,
+      state,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+    };
+
+    // 3) Manually build the query string so that encodeURIComponent handles spaces as %20
+    const queryString = Object.entries(params)
+      .map(
+        ([key, val]) =>
+          `${encodeURIComponent(key)}=${encodeURIComponent(val)}`
+      )
+      .join('&');
+
+    return `https://twitter.com/i/oauth2/authorize?${queryString}`;
   }
 }

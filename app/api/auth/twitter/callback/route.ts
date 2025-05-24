@@ -10,17 +10,17 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get("error")
 
     if (error) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}?error=twitter_auth_denied`)
+      return NextResponse.redirect(`${process.env.APP_URL}?error=twitter_auth_denied`)
     }
 
     if (!code || !state) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}?error=invalid_callback`)
+      return NextResponse.redirect(`${process.env.APP_URL}?error=invalid_callback`)
     }
 
     // Verify state
     const session = await getSession(request)
     if (session?.state !== state) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}?error=invalid_state`)
+      return NextResponse.redirect(`${process.env.APP_URL}?error=invalid_state`)
     }
 
     // Exchange code for access token
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       body: new URLSearchParams({
         grant_type: "authorization_code",
         code,
-        redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/twitter/callback`,
+        redirect_uri: `${process.env.APP_URL}/api/auth/twitter/callback`,
         code_verifier: session.codeVerifier!,
       }),
     })
@@ -93,12 +93,12 @@ export async function GET(request: NextRequest) {
       },
     }
 
-    const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}?success=twitter`)
+    const response = NextResponse.redirect(`${process.env.APP_URL}?success=twitter`)
     await setSession(request, updatedSession, response)
 
     return response
   } catch (error) {
     console.error("Twitter callback error:", error)
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}?error=twitter_callback_failed`)
+    return NextResponse.redirect(`${process.env.APP_URL}?error=twitter_callback_failed`)
   }
 }

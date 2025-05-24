@@ -1,61 +1,75 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, Users, Eye, Heart } from "lucide-react"
+import { TrendingUp, Users, Eye, Heart, BarChart3, Activity } from "lucide-react"
 import { MetricCard } from "./metric-card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts"
+import { motion } from "framer-motion"
 
 interface OverviewMetricsProps {
-  data: any
-  authStatus: {
-    facebook: boolean
-    instagram: boolean
-    twitter: boolean
+  data: {
+    overview: {
+      totalReach: number
+      totalEngagement: number
+      totalFollowers: number
+      engagementRate: number
+      totalImpressions: number
+      totalPosts: number
+    }
+    facebook?: any
+    instagram?: any
+    twitter?: any
+    connectedPlatforms: string[]
   }
 }
 
-export function OverviewMetrics({ data, authStatus }: OverviewMetricsProps) {
-  const overview = data?.overview || {
-    totalReach: 0,
-    totalEngagement: 0,
-    totalFollowers: 0,
-    engagementRate: 0,
-  }
+export function OverviewMetrics({ data }: OverviewMetricsProps) {
+  const { overview } = data
 
-  // Sample data for charts
-  const platformData = [
-    {
-      platform: "Facebook",
-      followers: data?.facebook?.pageData?.fan_count || 0,
-      engagement: data?.facebook?.insights?.engagement || 0,
-      reach: data?.facebook?.insights?.reach || 0,
-      connected: authStatus.facebook,
-    },
-    {
-      platform: "Instagram",
-      followers: data?.instagram?.profile?.followers_count || 0,
-      engagement: data?.instagram?.insights?.engagement || 0,
-      reach: data?.instagram?.insights?.reach || 0,
-      connected: authStatus.instagram,
-    },
-    {
-      platform: "Twitter",
-      followers: data?.twitter?.profile?.public_metrics?.followers_count || 0,
-      engagement: data?.twitter?.analytics?.engagement_rate || 0,
-      reach: data?.twitter?.analytics?.impressions || 0,
-      connected: authStatus.twitter,
-    },
-  ].filter((item) => item.connected)
+  // Platform comparison data
+  const platformData = data.connectedPlatforms.map((platform) => {
+    const platformInfo = data[platform as keyof typeof data]
+    let followers = 0
+    let engagement = 0
 
+    if (platformInfo && typeof platformInfo === "object" && !Array.isArray(platformInfo)) {
+      switch (platform) {
+        case "facebook":
+          followers = platformInfo.pageData?.fan_count || 0
+          engagement = platformInfo.insights?.engagement || 0
+          break
+        case "instagram":
+          followers = platformInfo.profile?.followers_count || 0
+          engagement =
+            platformInfo.media?.reduce(
+              (sum: number, item: any) => sum + (item.like_count || 0) + (item.comments_count || 0),
+              0,
+            ) || 0
+          break
+        case "twitter":
+          followers = platformInfo.profile?.followers_count || 0
+          engagement = platformInfo.analytics?.engagements || 0
+          break
+      }
+    }
+
+    return {
+      platform: platform.charAt(0).toUpperCase() + platform.slice(1),
+      followers,
+      engagement,
+    }
+  })
+
+  // Mock trend data for demonstration
   const engagementTrend = [
-    { date: "Mon", engagement: 120 },
-    { date: "Tue", engagement: 150 },
-    { date: "Wed", engagement: 180 },
-    { date: "Thu", engagement: 140 },
-    { date: "Fri", engagement: 200 },
-    { date: "Sat", engagement: 250 },
-    { date: "Sun", engagement: 220 },
+    { date: "Mon", engagement: Math.floor(overview.totalEngagement * 0.8) },
+    { date: "Tue", engagement: Math.floor(overview.totalEngagement * 0.9) },
+    { date: "Wed", engagement: Math.floor(overview.totalEngagement * 0.85) },
+    { date: "Thu", engagement: Math.floor(overview.totalEngagement * 1.1) },
+    { date: "Fri", engagement: Math.floor(overview.totalEngagement * 1.2) },
+    { date: "Sat", engagement: Math.floor(overview.totalEngagement * 1.15) },
+    { date: "Sun", engagement: overview.totalEngagement },
   ]
 
   const audienceData = [
@@ -68,19 +82,24 @@ export function OverviewMetrics({ data, authStatus }: OverviewMetricsProps) {
   return (
     <div className="space-y-6">
       {/* Key Metrics */}
-      <div className="grid gap-6 md:grid-cols-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="grid gap-6 md:grid-cols-4"
+      >
         <MetricCard
           title="Total Reach"
           value={overview.totalReach.toLocaleString()}
           icon={Eye}
-          trend={12}
+          trend={8}
           description="Across all platforms"
         />
         <MetricCard
           title="Total Engagement"
           value={overview.totalEngagement.toLocaleString()}
           icon={Heart}
-          trend={8}
+          trend={12}
           description="Likes, comments, shares"
         />
         <MetricCard
@@ -94,15 +113,38 @@ export function OverviewMetrics({ data, authStatus }: OverviewMetricsProps) {
           title="Engagement Rate"
           value={`${overview.engagementRate.toFixed(1)}%`}
           icon={TrendingUp}
-          trend={-2}
+          trend={overview.engagementRate > 3 ? 2 : -1}
           description="Average across platforms"
         />
-      </div>
+      </motion.div>
+
+      {/* Additional Metrics */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="grid gap-6 md:grid-cols-2"
+      >
+        <MetricCard
+          title="Total Impressions"
+          value={overview.totalImpressions.toLocaleString()}
+          icon={Activity}
+          trend={15}
+          description="Content views"
+        />
+        <MetricCard
+          title="Total Posts"
+          value={overview.totalPosts.toLocaleString()}
+          icon={BarChart3}
+          trend={3}
+          description="Published content"
+        />
+      </motion.div>
 
       {/* Charts */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Platform Comparison */}
-        <Card>
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader>
             <CardTitle>Platform Comparison</CardTitle>
             <CardDescription>Followers across connected platforms</CardDescription>
@@ -130,7 +172,7 @@ export function OverviewMetrics({ data, authStatus }: OverviewMetricsProps) {
         </Card>
 
         {/* Engagement Trend */}
-        <Card>
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader>
             <CardTitle>Weekly Engagement Trend</CardTitle>
             <CardDescription>Engagement over the past week</CardDescription>
@@ -154,8 +196,8 @@ export function OverviewMetrics({ data, authStatus }: OverviewMetricsProps) {
                     type="monotone"
                     dataKey="engagement"
                     stroke="var(--color-engagement)"
-                    strokeWidth={2}
-                    dot={{ fill: "var(--color-engagement)" }}
+                    strokeWidth={3}
+                    dot={{ fill: "var(--color-engagement)", strokeWidth: 2, r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -164,7 +206,7 @@ export function OverviewMetrics({ data, authStatus }: OverviewMetricsProps) {
         </Card>
 
         {/* Audience Demographics */}
-        <Card>
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader>
             <CardTitle>Audience Demographics</CardTitle>
             <CardDescription>Age distribution of your audience</CardDescription>
@@ -199,15 +241,18 @@ export function OverviewMetrics({ data, authStatus }: OverviewMetricsProps) {
           </CardContent>
         </Card>
 
-        {/* Performance Summary */}
-        <Card>
+        {/* Platform Performance Summary */}
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader>
-            <CardTitle>Performance Summary</CardTitle>
-            <CardDescription>Key metrics comparison</CardDescription>
+            <CardTitle>Platform Performance</CardTitle>
+            <CardDescription>Key metrics by platform</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {platformData.map((platform) => (
-              <div key={platform.platform} className="flex items-center justify-between p-3 border rounded-lg">
+            {platformData.map((platform, index) => (
+              <div
+                key={platform.platform}
+                className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-white to-gray-50"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 rounded-full bg-blue-500"></div>
                   <span className="font-medium">{platform.platform}</span>

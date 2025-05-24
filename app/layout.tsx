@@ -13,7 +13,6 @@ export const metadata: Metadata = {
   keywords: ["social media", "authentication", "business", "ads", "API"],
   authors: [{ name: "Your Company" }],
   robots: "index, follow",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({

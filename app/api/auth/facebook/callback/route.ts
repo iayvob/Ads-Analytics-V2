@@ -19,7 +19,7 @@ async function handler(request: NextRequest): Promise<NextResponse> {
   // Validate callback parameters
   if (params.error) {
     logger.warn("Facebook auth denied", { error: params.error })
-    return NextResponse.redirect(`${env.NEXT_PUBLIC_APP_URL}?error=facebook_auth_denied`)
+    return NextResponse.redirect(`${env.APP_URL}?error=facebook_auth_denied`)
   }
 
   const { code, state } = authCallbackSchema.parse(params)
@@ -31,7 +31,7 @@ async function handler(request: NextRequest): Promise<NextResponse> {
     throw new AuthError("Invalid authentication state")
   }
 
-  const redirectUri = `${env.NEXT_PUBLIC_APP_URL}/api/auth/facebook/callback`
+  const redirectUri = `${env.APP_URL}/api/auth/facebook/callback`
 
   // Exchange code for tokens
   const tokenData = await OAuthService.exchangeFacebookCode(code, redirectUri)
@@ -91,7 +91,7 @@ async function handler(request: NextRequest): Promise<NextResponse> {
 
   logger.info("Facebook auth completed", { userId: user.id, providerId: userData.id })
 
-  const response = NextResponse.redirect(`${env.NEXT_PUBLIC_APP_URL}?success=facebook`)
+  const response = NextResponse.redirect(`${env.APP_URL}?success=facebook`)
   await setSession(request, updatedSession, response)
 
   return response

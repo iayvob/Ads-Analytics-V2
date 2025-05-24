@@ -10,17 +10,17 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get("error")
 
     if (error) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}?error=instagram_auth_denied`)
+      return NextResponse.redirect(`${process.env.APP_URL}?error=instagram_auth_denied`)
     }
 
     if (!code || !state) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}?error=invalid_callback`)
+      return NextResponse.redirect(`${process.env.APP_URL}?error=invalid_callback`)
     }
 
     // Verify state
     const session = await getSession(request)
     if (session?.state !== state) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}?error=invalid_state`)
+      return NextResponse.redirect(`${process.env.APP_URL}?error=invalid_state`)
     }
 
     // Exchange code for access token
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
         client_id: process.env.INSTAGRAM_APP_ID!,
         client_secret: process.env.INSTAGRAM_APP_SECRET!,
         grant_type: "authorization_code",
-        redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/instagram/callback`,
+        redirect_uri: `${process.env.APP_URL}/api/auth/instagram/callback`,
         code,
       }),
     })
@@ -87,12 +87,12 @@ export async function GET(request: NextRequest) {
       },
     }
 
-    const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}?success=instagram`)
+    const response = NextResponse.redirect(`${process.env.APP_URL}?success=instagram`)
     await setSession(request, updatedSession, response)
 
     return response
   } catch (error) {
     console.error("Instagram callback error:", error)
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}?error=instagram_callback_failed`)
+    return NextResponse.redirect(`${process.env.APP_URL}?error=instagram_callback_failed`)
   }
 }

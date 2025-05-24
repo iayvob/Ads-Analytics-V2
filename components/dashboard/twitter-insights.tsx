@@ -3,88 +3,117 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { MetricCard } from "./metric-card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts"
+import { XAxis, YAxis, ResponsiveContainer, LineChart, Line } from "recharts"
 import { Users, Eye, Heart, TrendingUp } from "lucide-react"
+import { motion } from "framer-motion"
+import type { TwitterData } from "@/lib/api-clients/twitter-client"
 
 interface TwitterInsightsProps {
-  data?: any
+  data?: TwitterData & {
+    dataSource?: string
+    lastUpdated?: string
+  }
 }
 
 export function TwitterInsights({ data }: TwitterInsightsProps) {
-  const profile = data?.profile || {}
-  const analytics = data?.analytics || {}
-  const tweets = data?.tweets || []
+  if (!data) {
+    return (
+      <Card className="bg-white/80 backdrop-blur-sm">
+        <CardContent className="p-12 text-center">
+          <div className="text-gray-500">No Twitter data available</div>
+        </CardContent>
+      </Card>
+    )
+  }
 
-  // Sample data for demonstration
+  const { profile, analytics, tweets } = data
+
+  // Daily metrics (mock data based on tweets)
   const dailyMetrics = [
-    { date: "Mon", impressions: 12000, engagements: 450, followers: 1200 },
-    { date: "Tue", impressions: 15000, engagements: 520, followers: 1205 },
-    { date: "Wed", impressions: 11000, engagements: 380, followers: 1198 },
-    { date: "Thu", impressions: 18000, engagements: 680, followers: 1215 },
-    { date: "Fri", impressions: 22000, engagements: 890, followers: 1230 },
-    { date: "Sat", impressions: 16000, engagements: 620, followers: 1225 },
-    { date: "Sun", impressions: 14000, engagements: 540, followers: 1228 },
-  ]
-
-  const engagementTypes = [
-    { name: "Likes", value: 45, color: "#1da1f2" },
-    { name: "Retweets", value: 25, color: "#17bf63" },
-    { name: "Replies", value: 20, color: "#1da1f2" },
-    { name: "Clicks", value: 10, color: "#657786" },
-  ]
-
-  const topTweets = [
-    { content: "Excited to announce our new product launch! 🚀", impressions: 8500, engagements: 245, date: "2h" },
-    { content: "Behind the scenes of our development process", impressions: 6200, engagements: 189, date: "1d" },
-    { content: "Thank you to all our amazing customers! ❤️", impressions: 5800, engagements: 156, date: "2d" },
-    { content: "Industry insights: The future of technology", impressions: 4900, engagements: 134, date: "3d" },
-  ]
-
-  const audienceInterests = [
-    { interest: "Technology", percentage: 35 },
-    { interest: "Business", percentage: 28 },
-    { interest: "Marketing", percentage: 22 },
-    { interest: "Design", percentage: 15 },
+    {
+      date: "Mon",
+      impressions: Math.floor(analytics.impressions * 0.8),
+      engagements: Math.floor(analytics.engagements * 0.7),
+    },
+    {
+      date: "Tue",
+      impressions: Math.floor(analytics.impressions * 0.9),
+      engagements: Math.floor(analytics.engagements * 0.8),
+    },
+    {
+      date: "Wed",
+      impressions: Math.floor(analytics.impressions * 0.85),
+      engagements: Math.floor(analytics.engagements * 0.9),
+    },
+    {
+      date: "Thu",
+      impressions: Math.floor(analytics.impressions * 1.1),
+      engagements: Math.floor(analytics.engagements * 1.1),
+    },
+    {
+      date: "Fri",
+      impressions: Math.floor(analytics.impressions * 1.2),
+      engagements: Math.floor(analytics.engagements * 1.2),
+    },
+    {
+      date: "Sat",
+      impressions: Math.floor(analytics.impressions * 1.0),
+      engagements: Math.floor(analytics.engagements * 1.0),
+    },
+    { date: "Sun", impressions: analytics.impressions, engagements: analytics.engagements },
   ]
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
+      {/* Data Source Indicator */}
+      {data.dataSource && (
+        <div className="text-sm text-gray-500 mb-4">
+          Data source: {data.dataSource === "mock" ? "Sample data" : "Live Twitter API"}
+          {data.lastUpdated && ` • Updated: ${new Date(data.lastUpdated).toLocaleString()}`}
+        </div>
+      )}
+
       {/* Key Metrics */}
       <div className="grid gap-6 md:grid-cols-4">
         <MetricCard
           title="Followers"
-          value={profile.public_metrics?.followers_count?.toLocaleString() || "0"}
+          value={profile.followers_count.toLocaleString()}
           icon={Users}
           trend={2}
           description="Total followers"
         />
         <MetricCard
           title="Impressions"
-          value={analytics.impressions?.toLocaleString() || "0"}
+          value={analytics.impressions.toLocaleString()}
           icon={Eye}
           trend={18}
           description="Last 7 days"
         />
         <MetricCard
           title="Engagement Rate"
-          value={`${analytics.engagement_rate?.toFixed(1) || "0"}%`}
+          value={`${analytics.engagement_rate.toFixed(1)}%`}
           icon={Heart}
           trend={5}
           description="Average per tweet"
         />
         <MetricCard
-          title="Profile Visits"
-          value={analytics.profile_visits?.toLocaleString() || "0"}
+          title="Total Tweets"
+          value={profile.tweet_count.toLocaleString()}
           icon={TrendingUp}
-          trend={12}
-          description="This week"
+          trend={3}
+          description="All time"
         />
       </div>
 
       {/* Charts */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Daily Performance */}
-        <Card>
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader>
             <CardTitle>Daily Performance</CardTitle>
             <CardDescription>Impressions and engagements over time</CardDescription>
@@ -116,126 +145,44 @@ export function TwitterInsights({ data }: TwitterInsightsProps) {
           </CardContent>
         </Card>
 
-        {/* Engagement Breakdown */}
-        <Card>
+        {/* Top Performing Tweets */}
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader>
-            <CardTitle>Engagement Breakdown</CardTitle>
-            <CardDescription>Types of engagement on your tweets</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                engagement: {
-                  label: "Engagement",
-                },
-              }}
-              className="h-[300px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={engagementTypes}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}%`}
-                  >
-                    {engagementTypes.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        {/* Follower Growth */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Follower Growth</CardTitle>
-            <CardDescription>Daily follower count changes</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                followers: {
-                  label: "Followers",
-                  color: "hsl(var(--chart-3))",
-                },
-              }}
-              className="h-[300px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dailyMetrics}>
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="followers" fill="var(--color-followers)" radius={4} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        {/* Audience Interests */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Audience Interests</CardTitle>
-            <CardDescription>What your followers are interested in</CardDescription>
+            <CardTitle>Top Performing Tweets</CardTitle>
+            <CardDescription>Your most successful tweets</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {audienceInterests.map((item, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="text-sm font-medium">{item.interest}</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${item.percentage}%` }} />
+            {tweets
+              .sort((a, b) => {
+                const aEngagement = a.like_count + a.retweet_count + a.reply_count
+                const bEngagement = b.like_count + b.retweet_count + b.reply_count
+                return bEngagement - aEngagement
+              })
+              .slice(0, 4)
+              .map((tweet, index) => {
+                const totalEngagement = tweet.like_count + tweet.retweet_count + tweet.reply_count
+                return (
+                  <div key={tweet.id} className="flex items-start gap-4 p-3 border rounded-lg">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm line-clamp-2">{tweet.text}</p>
+                      <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                        <span>{tweet.impression_count.toLocaleString()} impressions</span>
+                        <span>{new Date(tweet.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-blue-600">{totalEngagement}</div>
+                      <div className="text-xs text-gray-500">engagements</div>
+                    </div>
                   </div>
-                  <span className="text-sm text-gray-500 w-8">{item.percentage}%</span>
-                </div>
-              </div>
-            ))}
+                )
+              })}
           </CardContent>
         </Card>
       </div>
-
-      {/* Top Performing Tweets */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Top Performing Tweets</CardTitle>
-          <CardDescription>Your most successful tweets this week</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {topTweets.map((tweet, index) => (
-            <div key={index} className="flex items-start gap-4 p-4 border rounded-lg">
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                {index + 1}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm mb-2">{tweet.content}</p>
-                <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" />
-                    {tweet.impressions.toLocaleString()} impressions
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Heart className="h-3 w-3" />
-                    {tweet.engagements} engagements
-                  </span>
-                  <span>{tweet.date} ago</span>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-semibold text-blue-600">{tweet.engagements}</div>
-                <div className="text-xs text-gray-500">total engagements</div>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    </div>
+    </motion.div>
   )
 }

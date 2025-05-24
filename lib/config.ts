@@ -3,7 +3,7 @@ import { z } from "zod"
 // Environment variable validation schema
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-  NEXT_PUBLIC_APP_URL: z.string().url(),
+  APP_URL: z.string().url(),
   SESSION_SECRET: z.string().min(32),
   DATABASE_URL: z.string().url(),
   FACEBOOK_APP_ID: z.string().min(1),
@@ -53,5 +53,5 @@ export const OAUTH_SCOPES = {
     "instagram_business_content_publish",
     "instagram_business_manage_insights",
   ].join(","),
-  TWITTER: "tweet.read users.read offline.access",
+  TWITTER: "tweet.read users.read like.read follows.read offline.access",
 } as const

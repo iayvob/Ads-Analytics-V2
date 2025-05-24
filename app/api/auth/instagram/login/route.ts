@@ -8,7 +8,7 @@ import { logger } from "@/lib/logger"
 
 async function handler(request: NextRequest): Promise<NextResponse> {
   const state = generateState()
-  const redirectUri = `${env.NEXT_PUBLIC_APP_URL}/api/auth/instagram/callback`
+  const redirectUri = `${env.APP_URL}/api/auth/instagram/callback`
 
   // Get existing session or create new one
   const existingSession = (await getSession(request)) || { userId: "", createdAt: Date.now() }
