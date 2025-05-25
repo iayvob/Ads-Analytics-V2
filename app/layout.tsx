@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   title: "Social Media Business Authentication",
   description: "Secure authentication for social media business accounts",
   keywords: ["social media", "authentication", "business", "ads", "API"],
-  authors: [{ name: "Your Company" }],
   robots: "index, follow",
+  creator: "Chalabi Ayoub",
 }
 
 export default function RootLayout({
