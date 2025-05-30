@@ -20,6 +20,29 @@ export interface AuthSession {
   state?: string
   codeVerifier?: string
   createdAt: number
+  facebook?: {
+    accessToken: string
+    userId: string
+    name: string
+    expiresAt: number
+    email?: string
+    businesses?: any[]
+    adAccounts?: any[]
+    configId?: string
+  }
+  instagram?: {
+    accessToken: string
+    userId: string
+    username: string
+    expiresAt: number
+  }
+  twitter?: {
+    accessToken: string
+    refreshToken?: string
+    userId: string
+    username: string
+    expiresAt: number
+  }
 }
 
 export interface ProviderTokens {
@@ -78,4 +101,6 @@ export interface AuthProviderInput {
   businessAccounts?: any
   adAccounts?: any
   configId?: string
+  profilePictureUrl?: string
+  businessAccountId?: string
 }

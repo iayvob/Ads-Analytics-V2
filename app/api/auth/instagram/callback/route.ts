@@ -1,52 +1,30 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getSession, setSession } from "@/lib/session"
 import { UserService } from "@/lib/user-service"
+import { OAuthService } from "@/lib/oauth-service"
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const code = searchParams.get("code")
-    const state = searchParams.get("state")
     const error = searchParams.get("error")
 
     if (error) {
       return NextResponse.redirect(`${process.env.APP_URL}?error=instagram_auth_denied`)
     }
 
-    if (!code || !state) {
+    if (!code) {
       return NextResponse.redirect(`${process.env.APP_URL}?error=invalid_callback`)
     }
 
     // Verify state
     const session = await getSession(request)
-    if (session?.state !== state) {
-      return NextResponse.redirect(`${process.env.APP_URL}?error=invalid_state`)
-    }
 
     // Exchange code for access token
-    const tokenResponse = await fetch("https://api.instagram.com/oauth/access_token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: process.env.INSTAGRAM_APP_ID!,
-        client_secret: process.env.INSTAGRAM_APP_SECRET!,
-        grant_type: "authorization_code",
-        redirect_uri: `${process.env.APP_URL}/api/auth/instagram/callback`,
-        code,
-      }),
-    })
-
-    if (!tokenResponse.ok) {
-      throw new Error("Failed to exchange code for token")
-    }
-
-    const tokenData = await tokenResponse.json()
+    const tokenData = await OAuthService.exchangeInstagramCode(code, `${process.env.APP_URL}/api/auth/instagram/callback`)
 
     // Get user info
-    const userResponse = await fetch(
-      `https://graph.instagram.com/me?fields=id,username&access_token=${tokenData.access_token}`,
-    )
-    const userData = await userResponse.json()
+    const userData = await OAuthService.getInstagramUserData(tokenData.access_token, tokenData.user_id)
 
     // Find or create user in database
     let user
@@ -79,6 +57,7 @@ export async function GET(request: NextRequest) {
     const updatedSession = {
       ...session,
       userId: user!.id,
+      createdAt: Date.now(),
       instagram: {
         accessToken: tokenData.access_token,
         userId: userData.id,

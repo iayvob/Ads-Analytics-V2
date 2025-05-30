@@ -76,19 +76,21 @@ export class OAuthService {
 
   static async exchangeInstagramCode(code: string, redirectUri: string) {
     try {
+      const formData = new FormData();
+      formData.append('client_id', env.INSTAGRAM_APP_ID);
+      formData.append('client_secret', env.INSTAGRAM_APP_SECRET);
+      formData.append('grant_type', 'authorization_code');
+      formData.append('redirect_uri', redirectUri);
+      formData.append('code', code);
+
       const response = await fetch("https://api.instagram.com/oauth/access_token", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          client_id: env.INSTAGRAM_APP_ID,
-          client_secret: env.INSTAGRAM_APP_SECRET,
-          grant_type: "authorization_code",
-          redirect_uri: redirectUri,
-          code,
-        }),
+        body: formData
       })
 
       if (!response.ok) {
+        const errorData = await response.text()
+        logger.error("Instagram token exchange failed", { error: errorData })
         throw new AuthError("Failed to authenticate with Instagram")
       }
 
@@ -99,38 +101,50 @@ export class OAuthService {
     }
   }
 
-  static async getInstagramUserData(accessToken: string): Promise<InstagramUserData> {
+  static async getInstagramUserData(accessToken: string, IGid: string): Promise<InstagramUserData> {
     try {
-      const response = await fetch(`https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`)
+      const url = new URL(`https://graph.instagram.com/v15.0/${IGid}`);
+      url.searchParams.append('fields', 'id,username,instagram_business_account,media_count');
+      url.searchParams.append('access_token', accessToken);
 
-      if (!response.ok) {
-        throw new AuthError("Failed to fetch Instagram user data")
+      const res = await fetch(url.toString());
+      if (!res.ok) {
+        const err = await res.text();
+        logger.error("Instagram user data fetch failed", { error: err });
+        throw new AuthError(`Failed to fetch Instagram user data: ${err}`);
       }
 
-      return await response.json()
-    } catch (error) {
-      logger.error("Failed to get Instagram user data", { error })
-      throw new AuthError("Failed to retrieve user information")
+      const json = await res.json() as { id: string; username: string };
+      return { id: json.id, username: json.username };
+    } catch (err: any) {
+      logger.error("getInstagramUserData error", { error: err });
+      throw new AuthError("Failed to retrieve Instagram user information");
     }
   }
 
-  static async exchangeTwitterCode(code: string, redirectUri: string, codeVerifier: string) {
+
+
+  static async exchangeTwitterCode(code: string, redirectUri: string, codeVerifier?: string) {
     try {
       const response = await fetch("https://api.twitter.com/2/oauth2/token", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
-          Authorization: `Basic ${Buffer.from(`${env.TWITTER_CLIENT_ID}:${env.TWITTER_CLIENT_SECRET}`).toString("base64")}`,
+          Authorization: `Basic ${Buffer.from(
+            `${env.TWITTER_CLIENT_ID}:${env.TWITTER_CLIENT_SECRET}`,
+          ).toString("base64")}`,
         },
         body: new URLSearchParams({
           grant_type: "authorization_code",
           code,
           redirect_uri: redirectUri,
-          code_verifier: codeVerifier,
+          code_verifier: codeVerifier!,
         }),
       })
 
       if (!response.ok) {
+        const errorData = await response.text()
+        logger.error("Twitter token exchange failed", { error: errorData })
         throw new AuthError("Failed to authenticate with Twitter")
       }
 
@@ -178,7 +192,7 @@ export class OAuthService {
   }
 
   static buildInstagramAuthUrl(state: string, redirectUri: string): string {
-    const authUrl = new URL("https://api.instagram.com/oauth/authorize");
+    const authUrl = new URL("https://www.instagram.com/oauth/authorize");
 
     authUrl.searchParams.set("client_id", env.INSTAGRAM_APP_ID)
     authUrl.searchParams.set("redirect_uri", redirectUri)

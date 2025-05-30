@@ -126,9 +126,9 @@ export default function Dashboard() {
 
     if (connected && !isInitialLoad) {
       // Redirect to dashboard after successful authentication
-      setTimeout(() => {
-        router.push("/dashboard")
-      }, 1500)
+      // setTimeout(() => {
+      //   router.push("/dashboard")
+      // }, 1500)
     }
   }, [authStatus, isInitialLoad, router])
 
@@ -144,7 +144,7 @@ export default function Dashboard() {
         // If user has connected accounts, redirect to dashboard
         const hasAccounts = Object.values(data.status).some(Boolean)
         if (hasAccounts) {
-          router.push("/dashboard")
+          // router.push("/dashboard")
         }
       }
     } catch (error) {

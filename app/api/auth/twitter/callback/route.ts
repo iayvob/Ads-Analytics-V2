@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getSession, setSession } from "@/lib/session"
 import { UserService } from "@/lib/user-service"
+import { OAuthService } from "@/lib/oauth-service"
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,33 +25,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Exchange code for access token
-    const tokenResponse = await fetch("https://api.twitter.com/2/oauth2/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Basic ${Buffer.from(`${process.env.TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`).toString("base64")}`,
-      },
-      body: new URLSearchParams({
-        grant_type: "authorization_code",
-        code,
-        redirect_uri: `${process.env.APP_URL}/api/auth/twitter/callback`,
-        code_verifier: session.codeVerifier!,
-      }),
-    })
-
-    if (!tokenResponse.ok) {
-      throw new Error("Failed to exchange code for token")
-    }
-
-    const tokenData = await tokenResponse.json()
+    const tokenData = await OAuthService.exchangeTwitterCode(
+      code,
+      `${process.env.APP_URL}/api/auth/twitter/callback`,
+      session.codeVerifier
+    )
 
     // Get user info
-    const userResponse = await fetch("https://api.twitter.com/2/users/me", {
-      headers: {
-        Authorization: `Bearer ${tokenData.access_token}`,
-      },
-    })
-    const userData = await userResponse.json()
+    const userData = await OAuthService.getTwitterUserData(tokenData.access_token)
 
     // Find or create user in database
     let user
@@ -59,13 +41,13 @@ export async function GET(request: NextRequest) {
       user = await UserService.getUserWithProviders(session.userId)
     } else {
       // Check if user exists by provider
-      const existingUser = await UserService.findUserByProvider("twitter", userData.data.id)
+      const existingUser = await UserService.findUserByProvider("twitter", userData.id)
       if (existingUser) {
         user = existingUser
       } else {
         // Create new user
-        user = await UserService.findOrCreateUserByEmail(`twitter_${userData.data.id}@temp.local`, {
-          username: userData.data.username,
+        user = await UserService.findOrCreateUserByEmail(`twitter_${userData.id}@temp.local`, {
+          username: userData.username,
         })
       }
     }
@@ -73,10 +55,9 @@ export async function GET(request: NextRequest) {
     // Create or update auth provider
     await UserService.upsertAuthProvider(user!.id, {
       provider: "twitter",
-      providerId: userData.data.id,
-      username: userData.data.username,
+      providerId: userData.id,
+      username: userData.username,
       accessToken: tokenData.access_token,
-      refreshToken: tokenData.refresh_token,
       expiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
     })
 
@@ -87,8 +68,8 @@ export async function GET(request: NextRequest) {
       twitter: {
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token,
-        userId: userData.data.id,
-        username: userData.data.username,
+        userId: userData.id,
+        username: userData.username,
         expiresAt: Date.now() + tokenData.expires_in * 1000,
       },
     }
