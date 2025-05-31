@@ -2,13 +2,11 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getSession, setSession } from "@/lib/session"
 import { UserService } from "@/lib/user-service"
 import { OAuthService } from "@/lib/oauth-service"
-import { withErrorHandling } from "@/lib/middleware"
-import { authCallbackSchema } from "@/lib/validation"
 import { AuthError } from "@/lib/errors"
 import { env } from "@/lib/config"
 import { logger } from "@/lib/logger"
 
-async function handler(request: NextRequest): Promise<NextResponse> {
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const params = {
     code: searchParams.get("code"),
@@ -22,7 +20,16 @@ async function handler(request: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(`${env.APP_URL}?error=facebook_auth_denied`)
   }
 
-  const { code, state } = authCallbackSchema.parse(params)
+  // Remove Facebook hash if present
+  const redirectUrl = `${env.APP_URL}?success=facebook`.replace(/#_=_$/, '')
+
+  // Verify required parameters
+  if (!params.code || !params.state) {
+    logger.warn("Missing required parameters", { params })
+    return NextResponse.redirect(`${env.APP_URL}?error=missing_params`)
+  }
+
+  const { code, state } = params
 
   // Verify state parameter
   const session = await getSession(request)
@@ -74,27 +81,23 @@ async function handler(request: NextRequest): Promise<NextResponse> {
   })
 
   // Update session
-  const updatedSession = {
-    ...session,
-    userId: user.id,
-    facebook: {
-      accessToken: tokenData.access_token,
-      userId: userData.id,
-      name: userData.name,
-      email: userData.email,
-      businesses: businessData.businesses,
-      adAccounts: businessData.adAccounts,
-      expiresAt: Date.now() + (tokenData.expires_in || 3600) * 1000,
-      configId: env.FACEBOOK_BUSINESS_CONFIG_ID,
-    },
+    const updatedSession = {
+        ...session,
+        userId: user.id,
+        facebook: {
+          accessToken: tokenData.access_token,
+          userId: userData.id,
+          name: userData.name,
+          expiresAt: Date.now() + (tokenData.expires_in || 3600) * 1000,
+          configId: env.FACEBOOK_BUSINESS_CONFIG_ID,
+        },
+        createdAt: session?.createdAt || Date.now()
+      }
+  
+    logger.info("Facebook auth completed", { userId: user.id, providerId: userData.id })
+  
+    const response = NextResponse.redirect(redirectUrl)
+    await setSession(request, updatedSession, response)
+  
+    return response
   }
-
-  logger.info("Facebook auth completed", { userId: user.id, providerId: userData.id })
-
-  const response = NextResponse.redirect(`${env.APP_URL}?success=facebook`)
-  await setSession(request, updatedSession, response)
-
-  return response
-}
-
-export const GET = withErrorHandling(handler)

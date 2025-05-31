@@ -16,12 +16,19 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# package manager locks
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+# Keep only the lock file for your chosen package manager by removing it from above
+
 # env files
 .env*
 !.env.example
 
-# vercel
+# deployment
 .vercel
+.heroku
 
 # typescript
 *.tsbuildinfo
