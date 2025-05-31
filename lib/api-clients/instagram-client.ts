@@ -25,7 +25,7 @@ export interface InstagramData {
 }
 
 export class InstagramApiClient extends BaseApiClient {
-  private static readonly BASE_URL = "https://graph.instagram.com"
+  private static readonly BASE_URL = "https://graph.instagram.com/v23.0"
 
   static async fetchData(accessToken: string): Promise<InstagramData> {
     try {

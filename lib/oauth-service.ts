@@ -103,10 +103,11 @@ export class OAuthService {
 
   static async getInstagramUserData(accessToken: string, IGid: string): Promise<InstagramUserData> {
     try {
-      const url = new URL(`https://graph.instagram.com/v15.0/${IGid}`);
-      url.searchParams.append('fields', 'id,username,instagram_business_account,media_count');
+      const url = new URL(`https://graph.instagram.com/v23.0/me`);
+      url.searchParams.append('fields', 'id,username');
       url.searchParams.append('access_token', accessToken);
 
+      console.log("Fetching Instagram user data from URL:", url.toString());
       const res = await fetch(url.toString());
       if (!res.ok) {
         const err = await res.text();

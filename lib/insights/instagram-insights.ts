@@ -2,6 +2,8 @@ import { logger } from "../logger"
 import { AuthError } from "../errors"
 
 export class InstagramInsightsService {
+  private static readonly BASE_URL = "https://graph.instagram.com/v23.0"
+  
   static async getInsights(accessToken: string) {
     try {
       const [profile, insights, media] = await Promise.all([
@@ -25,7 +27,7 @@ export class InstagramInsightsService {
   private static async getProfile(accessToken: string) {
     try {
       const response = await fetch(
-        `https://graph.instagram.com/me?access_token=${accessToken}&fields=id,username,followers_count,follows_count,media_count`,
+        `${this.BASE_URL}/me?access_token=${accessToken}&fields=id,username,followers_count,follows_count,media_count`,
       )
 
       if (!response.ok) {
@@ -42,7 +44,7 @@ export class InstagramInsightsService {
   private static async getInsightsData(accessToken: string) {
     try {
       const response = await fetch(
-        `https://graph.instagram.com/me/insights?access_token=${accessToken}&metric=impressions,reach,profile_views&period=week`,
+        `${this.BASE_URL}/me/insights?access_token=${accessToken}&metric=impressions,reach,profile_views&period=week`,
       )
 
       if (!response.ok) {
@@ -96,7 +98,7 @@ export class InstagramInsightsService {
   private static async getRecentMedia(accessToken: string) {
     try {
       const response = await fetch(
-        `https://graph.instagram.com/me/media?access_token=${accessToken}&fields=id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count&limit=10`,
+        `${this.BASE_URL}/me/media?access_token=${accessToken}&fields=id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count&limit=10`,
       )
 
       if (!response.ok) {
