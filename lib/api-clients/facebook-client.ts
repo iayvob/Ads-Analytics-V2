@@ -38,9 +38,9 @@ export class FacebookApiClient extends BaseApiClient {
       ])
 
       return {
-        pageData: pageData.status === "fulfilled" ? pageData.value : this.getMockPageData(),
-        insights: insights.status === "fulfilled" ? insights.value : this.getMockInsights(),
-        posts: posts.status === "fulfilled" ? posts.value : this.getMockPosts(),
+        pageData: pageData.status === "fulfilled" ? pageData.value as FacebookData['pageData'] : this.getMockPageData(),
+        insights: insights.status === "fulfilled" ? insights.value as FacebookData['insights'] : this.getMockInsights(),
+        posts: posts.status === "fulfilled" ? posts.value as FacebookData['posts'] : this.getMockPosts(),
       }
     } catch (error) {
       logger.warn("Facebook API failed, using mock data", { error })

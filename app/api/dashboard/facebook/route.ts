@@ -21,7 +21,7 @@ async function handler(request: NextRequest): Promise<NextResponse> {
 
   try {
     // Parse request body for options
-    let options = { period: "week" as const, includePosts: true, includeAds: true }
+    let options: z.infer<typeof requestSchema> = { period: "week", includePosts: true, includeAds: true }
 
     if (request.method === "POST") {
       const body = await request.json().catch(() => ({}))

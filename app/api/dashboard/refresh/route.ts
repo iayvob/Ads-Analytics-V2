@@ -50,8 +50,8 @@ async function handler(request: NextRequest): Promise<NextResponse> {
                   await UserService.upsertAuthProvider(session.userId, {
                     provider: "twitter",
                     providerId: provider.providerId,
-                    username: provider.username,
-                    email: provider.email,
+                    username: provider.username ?? undefined,
+                    email: provider.email ?? undefined,
                     accessToken: tokenData.access_token,
                     refreshToken: tokenData.refresh_token,
                     expiresAt: new Date(Date.now() + tokenData.expires_in * 1000),

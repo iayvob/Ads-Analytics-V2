@@ -52,7 +52,13 @@ export class DashboardService {
       const provider = activeProviders[index]
 
       if (result.status === "fulfilled" && result.value) {
-        dashboardData[provider.provider as keyof DashboardData] = result.value
+        if (provider.provider === 'facebook') {
+          dashboardData.facebook = result.value as FacebookData;
+        } else if (provider.provider === 'instagram') {
+          dashboardData.instagram = result.value as InstagramData;
+        } else if (provider.provider === 'twitter') {
+          dashboardData.twitter = result.value as TwitterData;
+        }
         this.aggregateOverviewData(dashboardData.overview, provider.provider, result.value)
       } else {
         logger.warn(`Failed to fetch ${provider.provider} data`, {

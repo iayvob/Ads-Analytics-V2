@@ -29,16 +29,20 @@ export class InstagramApiClient extends BaseApiClient {
 
   static async fetchData(accessToken: string): Promise<InstagramData> {
     try {
-      const [profile, insights, media] = await Promise.allSettled([
+      const [profile, insights, media] = await Promise.allSettled<[
+        ReturnType<typeof this.getProfile>,
+        ReturnType<typeof this.getInsights>,
+        ReturnType<typeof this.getMedia>
+      ]>([
         this.getProfile(accessToken),
         this.getInsights(accessToken),
         this.getMedia(accessToken),
       ])
 
       return {
-        profile: profile.status === "fulfilled" ? profile.value : this.getMockProfile(),
-        insights: insights.status === "fulfilled" ? insights.value : this.getMockInsights(),
-        media: media.status === "fulfilled" ? media.value : this.getMockMedia(),
+        profile: profile.status === "fulfilled" ? profile.value as InstagramData['profile'] : this.getMockProfile(),
+        insights: insights.status === "fulfilled" ? insights.value as InstagramData['insights'] : this.getMockInsights(),
+        media: media.status === "fulfilled" ? media.value as InstagramData['media'] : this.getMockMedia(),
       }
     } catch (error) {
       logger.warn("Instagram API failed, using mock data", { error })

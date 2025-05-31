@@ -9,7 +9,7 @@ import { APP_CONFIG } from "./config" // Declare the APP_CONFIG variable
 export class UserService {
   static async findOrCreateUserByEmail(email: string, userData?: CreateUserInput): Promise<User> {
     try {
-      const sanitizedData = userData ? validateAndSanitizeUser(userData) : {}
+      const sanitizedData = userData ? validateAndSanitizeUser(userData) : {} as Partial<CreateUserInput>
 
       let user = await prisma.user.findUnique({
         where: { email },
@@ -19,7 +19,7 @@ export class UserService {
         user = await prisma.user.create({
           data: {
             email,
-            username: sanitizedData.username,
+            ...(sanitizedData.username ? { username: sanitizedData.username } : {}),
           },
         })
         logger.info("User created", { userId: user.id, email })
@@ -181,12 +181,12 @@ export class UserService {
     }
   }
 
-  static async isTokenExpired(provider: AuthProvider): boolean {
+  static isTokenExpired(provider: AuthProvider): boolean {
     if (!provider.expiresAt) return false
     return new Date() >= provider.expiresAt
   }
 
-  static async needsTokenRefresh(provider: AuthProvider): boolean {
+  static needsTokenRefresh(provider: AuthProvider): boolean {
     if (!provider.expiresAt) return false
     const threshold = new Date(Date.now() + APP_CONFIG.TOKEN_REFRESH_THRESHOLD)
     return provider.expiresAt <= threshold

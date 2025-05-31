@@ -18,6 +18,8 @@ export class AuthError extends AppError {
 }
 
 export class ValidationError extends AppError {
+  public details?: any;
+  
   constructor(message: string, details?: any) {
     super("VALIDATION_ERROR", message, 400)
     this.details = details

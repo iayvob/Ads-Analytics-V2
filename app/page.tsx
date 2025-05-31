@@ -472,7 +472,7 @@ export default function Dashboard() {
                             className="space-y-3"
                           >
                             <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100">
-                              {platform.id === "facebook" && sessionData.name && (
+                              {platform.id === "facebook" && "name" in sessionData && sessionData.name && (
                                 <>
                                   <p className="font-medium text-green-800">Account: {sessionData.name}</p>
                                   {sessionData.email && (
@@ -486,10 +486,10 @@ export default function Dashboard() {
                                   )}
                                 </>
                               )}
-                              {platform.id === "instagram" && sessionData.username && (
+                              {platform.id === "instagram" && "username" in sessionData && (
                                 <p className="font-medium text-green-800">@{sessionData.username}</p>
                               )}
-                              {platform.id === "twitter" && sessionData.username && (
+                              {platform.id === "twitter" && "username" in sessionData && (
                                 <p className="font-medium text-green-800">@{sessionData.username}</p>
                               )}
                               <p className="text-xs text-green-600 mt-1">

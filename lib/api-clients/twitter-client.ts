@@ -93,9 +93,10 @@ export class TwitterApiClient extends BaseApiClient {
     try {
       const tweets = await this.getTweets(accessToken, userId, 50)
 
-      const totalImpressions = tweets.reduce((sum, tweet) => sum + tweet.impression_count, 0)
+      const totalImpressions = tweets.reduce((sum: number, tweet: { impression_count: number }) => sum + tweet.impression_count, 0)
       const totalEngagements = tweets.reduce(
-        (sum, tweet) => sum + tweet.like_count + tweet.retweet_count + tweet.reply_count,
+        (sum: number, tweet: { like_count: number, retweet_count: number, reply_count: number }) => 
+          sum + tweet.like_count + tweet.retweet_count + tweet.reply_count,
         0,
       )
 

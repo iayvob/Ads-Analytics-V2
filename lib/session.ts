@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { SignJWT, jwtVerify } from "jose"
+import { SignJWT, jwtVerify, type JWTPayload } from "jose"
 import { env, APP_CONFIG } from "./config"
 import { AuthError } from "./errors"
 import { logger } from "./logger"
@@ -8,7 +8,7 @@ import type { AuthSession } from "./types"
 const encodedKey = new TextEncoder().encode(env.SESSION_SECRET)
 
 export async function encrypt(payload: AuthSession): Promise<string> {
-  return new SignJWT(payload)
+  return new SignJWT(payload as unknown as JWTPayload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(new Date(Date.now() + APP_CONFIG.SESSION_DURATION))
@@ -20,7 +20,12 @@ export async function decrypt(session: string): Promise<AuthSession | null> {
     const { payload } = await jwtVerify(session, encodedKey, {
       algorithms: ["HS256"],
     })
-    return payload as AuthSession
+    
+    // Ensure payload has the right structure
+    if (typeof payload === 'object' && payload !== null && 'userId' in payload) {
+      return payload as unknown as AuthSession;
+    }
+    return null;
   } catch (error) {
     logger.warn("Failed to decrypt session", { error: error instanceof Error ? error.message : "Unknown error" })
     return null
@@ -38,12 +43,12 @@ export async function getSession(request: NextRequest): Promise<AuthSession | nu
     logger.info("Session expired", { userId: session.userId })
     return null
   }
-
+  
   return session
 }
 
 export async function setSession(
-  request: NextRequest,
+  _request: NextRequest, // Marked as unused with underscore
   sessionData: AuthSession,
   response?: NextResponse,
 ): Promise<NextResponse> {

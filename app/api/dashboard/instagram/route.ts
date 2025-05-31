@@ -23,7 +23,7 @@ async function handler(request: NextRequest): Promise<NextResponse> {
   try {
     // Parse request body for options
     let options = {
-      period: "week" as const,
+      period: "week" as "day" | "week" | "days_28",
       includeMedia: true,
       includeStories: true,
       mediaLimit: 25,

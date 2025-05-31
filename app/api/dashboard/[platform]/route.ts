@@ -10,14 +10,14 @@ interface RouteParams {
   }
 }
 
-async function handler(request: NextRequest, { params }: RouteParams): Promise<NextResponse> {
+async function handler(request: NextRequest): Promise<NextResponse> {
   const session = await getSession(request)
 
   if (!session?.userId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
   }
 
-  const { platform } = params
+  const platform = request.nextUrl.pathname.split('/').pop() as "facebook" | "instagram" | "twitter"
 
   if (!["facebook", "instagram", "twitter"].includes(platform)) {
     return NextResponse.json({ error: "Invalid platform" }, { status: 400 })
