@@ -1,5 +1,9 @@
 {
-  "name": "social-auth-app",
+  "name": "ads-insights",
+  "author": {
+    "name": "Chalabi Ayoub",
+    "email": "iayvob@gmail.com"
+  },
   "version": "1.0.0",
   "private": true,
   "scripts": {
