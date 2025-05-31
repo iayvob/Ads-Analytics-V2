@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getSession, setSession } from "@/lib/session"
 import { UserService } from "@/lib/user-service"
 import { OAuthService } from "@/lib/oauth-service"
+import { env } from "@/lib/config"
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,21 +11,21 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get("error")
 
     if (error) {
-      return NextResponse.redirect(`${process.env.APP_URL}?error=instagram_auth_denied`)
+      return NextResponse.redirect(`${env.APP_URL}?error=instagram_auth_denied`)
     }
 
     if (!code) {
-      return NextResponse.redirect(`${process.env.APP_URL}?error=invalid_callback`)
+      return NextResponse.redirect(`${env.APP_URL}?error=invalid_callback`)
     }
 
     // Verify state
     const session = await getSession(request)
 
     // Exchange code for access token
-    const tokenData = await OAuthService.exchangeInstagramCode(code, `${process.env.APP_URL}/api/auth/instagram/callback`)
+    const tokenData = await OAuthService.exchangeInstagramCode(code, `${env.APP_URL}/api/auth/instagram/callback`)
 
     // Get user info
-    const userData = await OAuthService.getInstagramUserData(tokenData.access_token, tokenData.user_id)
+    const userData = await OAuthService.getInstagramUserData(tokenData.access_token)
 
     // Find or create user in database
     let user
@@ -66,12 +67,12 @@ export async function GET(request: NextRequest) {
       },
     }
 
-    const response = NextResponse.redirect(`${process.env.APP_URL}?success=instagram`)
+    const response = NextResponse.redirect(`${env.APP_URL}?success=instagram`)
     await setSession(request, updatedSession, response)
 
     return response
   } catch (error) {
     console.error("Instagram callback error:", error)
-    return NextResponse.redirect(`${process.env.APP_URL}?error=instagram_callback_failed`)
+    return NextResponse.redirect(`${env.APP_URL}?error=instagram_callback_failed`)
   }
 }

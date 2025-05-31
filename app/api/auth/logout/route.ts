@@ -3,6 +3,7 @@ import { getSession, clearSession } from "@/lib/session"
 import { UserService } from "@/lib/user-service"
 import { withAuth } from "@/lib/middleware"
 import { logger } from "@/lib/logger"
+import { env } from "@/lib/config"
 
 async function handler(request: NextRequest): Promise<NextResponse> {
   const session = await getSession(request)
@@ -39,7 +40,7 @@ async function handler(request: NextRequest): Promise<NextResponse> {
               method: "POST",
               headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
-                Authorization: `Basic ${Buffer.from(`${process.env.TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`).toString("base64")}`,
+                Authorization: `Basic ${Buffer.from(`${env.TWITTER_CLIENT_ID}:${env.TWITTER_CLIENT_SECRET}`).toString("base64")}`,
               },
               body: new URLSearchParams({
                 token: provider.accessToken,

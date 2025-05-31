@@ -101,13 +101,12 @@ export class OAuthService {
     }
   }
 
-  static async getInstagramUserData(accessToken: string, IGid: string): Promise<InstagramUserData> {
+  static async getInstagramUserData(accessToken: string): Promise<InstagramUserData> {
     try {
       const url = new URL(`https://graph.instagram.com/v23.0/me`);
       url.searchParams.append('fields', 'id,username');
       url.searchParams.append('access_token', accessToken);
 
-      console.log("Fetching Instagram user data from URL:", url.toString());
       const res = await fetch(url.toString());
       if (!res.ok) {
         const err = await res.text();
@@ -211,9 +210,6 @@ export class OAuthService {
   ): string {
     // 1) Collapse any “//” in the path portion of the URI to a single “/”
     const normalizeRedirect = redirectUri.replace(/([^:]\/)\/+/g, '$1');
-    console.log("redirect URI:", redirectUri);
-
-    console.log("Normalized redirect URI:", normalizeRedirect);
 
     // 2) Define your params in a plain object
     const params: Record<string, string> = {

@@ -1,3 +1,5 @@
+import { env } from "./config"
+
 type LogLevel = "info" | "warn" | "error" | "debug"
 
 interface LogEntry {
@@ -21,7 +23,7 @@ class Logger {
     }
 
     // In production, you'd send this to a logging service
-    if (process.env.NODE_ENV === "development") {
+    if (env.NODE_ENV === "development") {
       console.log(JSON.stringify(entry, null, 2))
     }
   }
@@ -39,7 +41,7 @@ class Logger {
   }
 
   debug(message: string, details?: any, userId?: string, provider?: string) {
-    if (process.env.NODE_ENV === "development") {
+    if (env.NODE_ENV === "development") {
       this.log("debug", message, details, userId, provider)
     }
   }
