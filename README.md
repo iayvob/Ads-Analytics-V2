@@ -110,16 +110,31 @@ TWITTER_CLIENT_SECRET=your_twitter_client_secret
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
-\`\`\`bash
-npm i -g vercel
-vercel
-\`\`\`
+
+1. Make sure your environment variables are properly set in Vercel:
+   - `APP_URL`: The URL of your deployed application (e.g., `https://your-app.vercel.app`)
+   - `DATABASE_URL`: Your database connection string
+   - All OAuth API keys and secrets for each platform
+
+2. Deploy with Vercel CLI:
+   ```bash
+   npm i -g vercel
+   vercel
+   ```
+
+3. Or connect your GitHub repository to Vercel for automatic deployments
+
+4. **Important Callback URLs**: When setting up OAuth apps on their respective platforms, 
+   use these callback URLs:
+   - Facebook: `https://your-app.vercel.app/api/auth/facebook/callback`
+   - Instagram: `https://your-app.vercel.app/api/auth/instagram/callback`
+   - Twitter: `https://your-app.vercel.app/api/auth/twitter/callback`
 
 ### Docker
-\`\`\`bash
+```bash
 docker build -t social-auth-app .
-docker run -p 3000:3000 social-auth-app
-\`\`\`
+docker run -p 3000:3000 -e APP_URL=http://localhost:3000 -e DATABASE_URL=your_db_url social-auth-app
+```
 
 ## 🧪 Development
 

@@ -5,6 +5,7 @@ import { OAuthService } from "@/lib/oauth-service";
 import { env } from "@/lib/config";
 import { withRateLimit, withErrorHandling } from "@/lib/middleware";
 import { logger } from "@/lib/logger";
+import { createUrl } from "@/lib/url-utils";
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -14,7 +15,7 @@ async function handler(request: NextRequest): Promise<NextResponse> {
   const state         = generateState();
   const codeVerifier  = generateCodeVerifier();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
-  const redirectUri   = `${env.APP_URL}/api/auth/twitter/callback`;
+  const redirectUri   = createUrl("/api/auth/twitter/callback", request.headers);
 
   // merge into session
   const existingSession = (await getSession(request)) || { userId: "", createdAt: Date.now() };

@@ -4,6 +4,7 @@ import { UserService } from "@/lib/user-service"
 import { OAuthService } from "@/lib/oauth-service"
 import { env } from "@/lib/config"
 import { withErrorHandling } from "@/lib/middleware"
+import { createUrl, normalizeUrl } from "@/lib/url-utils"
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -17,23 +18,24 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const error = searchParams.get("error")
 
     if (error) {
-      return NextResponse.redirect(`${env.APP_URL}?error=twitter_auth_denied`)
+      return NextResponse.redirect(createUrl(`?error=twitter_auth_denied`, request.headers))
     }
 
     if (!code || !state) {
-      return NextResponse.redirect(`${env.APP_URL}?error=invalid_callback`)
+      return NextResponse.redirect(createUrl(`?error=invalid_callback`, request.headers))
     }
 
     // Verify state
     const session = await getSession(request)
     if (session?.state !== state) {
-      return NextResponse.redirect(`${env.APP_URL}?error=invalid_state`)
+      return NextResponse.redirect(createUrl(`?error=invalid_state`, request.headers))
     }
 
     // Exchange code for access token
+    const callbackUrl = createUrl(`/api/auth/twitter/callback`, request.headers)
     const tokenData = await OAuthService.exchangeTwitterCode(
       code,
-      `${env.APP_URL}/api/auth/twitter/callback`,
+      callbackUrl,
       session.codeVerifier
     )
 
@@ -80,12 +82,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       },
     }
 
-    const response = NextResponse.redirect(`${env.APP_URL}?success=twitter`)
+    const response = NextResponse.redirect(createUrl(`?success=twitter`, request.headers))
     await setSession(request, updatedSession, response)
 
     return response
   } catch (error) {
     console.error("Twitter callback error:", error)
-    return NextResponse.redirect(`${env.APP_URL}?error=twitter_callback_failed`)
+    return NextResponse.redirect(createUrl(`?error=twitter_callback_failed`, request.headers))
   }
 })

@@ -5,6 +5,7 @@ import { OAuthService } from "@/lib/oauth-service"
 import { withRateLimit, withErrorHandling } from "@/lib/middleware"
 import { env } from "@/lib/config"
 import { logger } from "@/lib/logger"
+import { createUrl } from "@/lib/url-utils"
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -12,7 +13,7 @@ export const revalidate = 0;
 
 async function handler(request: NextRequest): Promise<NextResponse> {
   const state = generateState()
-  const redirectUri = `${env.APP_URL}/api/auth/facebook/callback`
+  const redirectUri = createUrl("/api/auth/facebook/callback", request.headers)
 
   // Get existing session or create new one
   const existingSession = (await getSession(request)) || { userId: "", createdAt: Date.now() }

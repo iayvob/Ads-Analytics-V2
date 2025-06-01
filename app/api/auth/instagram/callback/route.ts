@@ -4,6 +4,7 @@ import { UserService } from "@/lib/user-service"
 import { OAuthService } from "@/lib/oauth-service"
 import { env } from "@/lib/config"
 import { withErrorHandling } from "@/lib/middleware"
+import { createUrl } from "@/lib/url-utils"
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -16,18 +17,19 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const error = searchParams.get("error")
 
     if (error) {
-      return NextResponse.redirect(`${env.APP_URL}?error=instagram_auth_denied`)
+      return NextResponse.redirect(createUrl(`?error=instagram_auth_denied`, request.headers))
     }
 
     if (!code) {
-      return NextResponse.redirect(`${env.APP_URL}?error=invalid_callback`)
+      return NextResponse.redirect(createUrl(`?error=invalid_callback`, request.headers))
     }
 
     // Verify state
     const session = await getSession(request)
 
     // Exchange code for access token
-    const tokenData = await OAuthService.exchangeInstagramCode(code, `${env.APP_URL}/api/auth/instagram/callback`)
+    const callbackUrl = createUrl("/api/auth/instagram/callback", request.headers)
+    const tokenData = await OAuthService.exchangeInstagramCode(code, callbackUrl)
 
     // Get user info
     const userData = await OAuthService.getInstagramUserData(tokenData.access_token)
@@ -72,12 +74,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       },
     }
 
-    const response = NextResponse.redirect(`${env.APP_URL}?success=instagram`)
+    const response = NextResponse.redirect(createUrl(`?success=instagram`, request.headers))
     await setSession(request, updatedSession, response)
 
     return response
   } catch (error) {
     console.error("Instagram callback error:", error)
-    return NextResponse.redirect(`${env.APP_URL}?error=instagram_callback_failed`)
+    return NextResponse.redirect(createUrl(`?error=instagram_callback_failed`, request.headers))
   }
 })

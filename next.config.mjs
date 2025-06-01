@@ -8,6 +8,19 @@ const nextConfig = {
   },
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
+    outputFileTracingExcludes: {
+      '*': [
+        'node_modules/@swc/core-linux-x64-gnu',
+        'node_modules/@swc/core-linux-x64-musl',
+        'node_modules/@esbuild/linux-x64',
+        'node_modules/prisma/**/*.dat',
+        'node_modules/prisma/libquery_engine-*',
+      ],
+    },
+  },
+  // Set serverless function timeout to the maximum (60 seconds for Vercel)
+  serverRuntimeConfig: {
+    maxDuration: 60,
   },
   images: {
     domains: ['graph.facebook.com', 'scontent.cdninstagram.com', 'pbs.twimg.com'],

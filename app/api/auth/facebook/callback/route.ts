@@ -6,6 +6,7 @@ import { AuthError } from "@/lib/errors"
 import { env } from "@/lib/config"
 import { logger } from "@/lib/logger"
 import { withErrorHandling } from "@/lib/middleware"
+import { createUrl } from "@/lib/url-utils"
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -22,16 +23,16 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   // Validate callback parameters
   if (params.error) {
     logger.warn("Facebook auth denied", { error: params.error })
-    return NextResponse.redirect(`${env.APP_URL}?error=facebook_auth_denied`)
+    return NextResponse.redirect(createUrl(`?error=facebook_auth_denied`, request.headers))
   }
 
   // Remove Facebook hash if present
-  const redirectUrl = `${env.APP_URL}?success=facebook`.replace(/#_=_$/, '')
+  const redirectUrl = createUrl(`?success=facebook`, request.headers).replace(/#_=_$/, '')
 
   // Verify required parameters
   if (!params.code || !params.state) {
     logger.warn("Missing required parameters", { params })
-    return NextResponse.redirect(`${env.APP_URL}?error=missing_params`)
+    return NextResponse.redirect(createUrl(`?error=missing_params`, request.headers))
   }
 
   const { code, state } = params
@@ -43,7 +44,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     throw new AuthError("Invalid authentication state")
   }
 
-  const redirectUri = `${env.APP_URL}/api/auth/facebook/callback`
+  const redirectUri = createUrl("/api/auth/facebook/callback", request.headers)
 
   // Exchange code for tokens
   const tokenData = await OAuthService.exchangeFacebookCode(code, redirectUri)

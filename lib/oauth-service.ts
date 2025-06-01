@@ -1,18 +1,22 @@
 import { env, OAUTH_SCOPES } from "./config"
 import { logger } from "./logger"
 import { AuthError } from "./errors"
+import { normalizeUrl } from "./url-utils"
 import type { FacebookUserData, FacebookBusinessData, InstagramUserData, TwitterUserData } from "./types"
 
 export class OAuthService {
   static async exchangeFacebookCode(code: string, redirectUri: string) {
     try {
+      // Normalize the redirect URI for compatibility with Vercel deployments
+      const normalizedRedirectUri = redirectUri.replace(/([^:]\/)\/+/g, '$1');
+      
       const response = await fetch("https://graph.facebook.com/v18.0/oauth/access_token", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
           client_id: env.FACEBOOK_APP_ID,
           client_secret: env.FACEBOOK_APP_SECRET,
-          redirect_uri: redirectUri,
+          redirect_uri: normalizedRedirectUri,
           code,
         }),
       })
@@ -76,11 +80,14 @@ export class OAuthService {
 
   static async exchangeInstagramCode(code: string, redirectUri: string) {
     try {
+      // Normalize the redirect URI for compatibility with Vercel deployments
+      const normalizedRedirectUri = redirectUri.replace(/([^:]\/)\/+/g, '$1');
+      
       const formData = new FormData();
       formData.append('client_id', env.INSTAGRAM_APP_ID);
       formData.append('client_secret', env.INSTAGRAM_APP_SECRET);
       formData.append('grant_type', 'authorization_code');
-      formData.append('redirect_uri', redirectUri);
+      formData.append('redirect_uri', normalizedRedirectUri);
       formData.append('code', code);
 
       const response = await fetch("https://api.instagram.com/oauth/access_token", {
@@ -126,6 +133,9 @@ export class OAuthService {
 
   static async exchangeTwitterCode(code: string, redirectUri: string, codeVerifier?: string) {
     try {
+      // Normalize the redirect URI for compatibility with Vercel deployments
+      const normalizedRedirectUri = redirectUri.replace(/([^:]\/)\/+/g, '$1');
+      
       const response = await fetch("https://api.twitter.com/2/oauth2/token", {
         method: "POST",
         headers: {
@@ -137,7 +147,7 @@ export class OAuthService {
         body: new URLSearchParams({
           grant_type: "authorization_code",
           code,
-          redirect_uri: redirectUri,
+          redirect_uri: normalizedRedirectUri,
           code_verifier: codeVerifier!,
         }),
       })
@@ -176,9 +186,12 @@ export class OAuthService {
   }
 
   static buildFacebookAuthUrl(state: string, redirectUri: string): string {
+    // Normalize the redirect URI for compatibility with Vercel deployments
+    const normalizedRedirectUri = redirectUri.replace(/([^:]\/)\/+/g, '$1');
+    
     const authUrl = new URL("https://www.facebook.com/v18.0/dialog/oauth")
     authUrl.searchParams.set("client_id", env.FACEBOOK_APP_ID)
-    authUrl.searchParams.set("redirect_uri", redirectUri)
+    authUrl.searchParams.set("redirect_uri", normalizedRedirectUri)
     authUrl.searchParams.set("scope", OAUTH_SCOPES.FACEBOOK)
     authUrl.searchParams.set("response_type", "code")
     authUrl.searchParams.set("state", state)
@@ -192,10 +205,13 @@ export class OAuthService {
   }
 
   static buildInstagramAuthUrl(state: string, redirectUri: string): string {
+    // Normalize the redirect URI for compatibility with Vercel deployments
+    const normalizedRedirectUri = redirectUri.replace(/([^:]\/)\/+/g, '$1');
+    
     const authUrl = new URL("https://www.instagram.com/oauth/authorize");
 
     authUrl.searchParams.set("client_id", env.INSTAGRAM_APP_ID)
-    authUrl.searchParams.set("redirect_uri", redirectUri)
+    authUrl.searchParams.set("redirect_uri", normalizedRedirectUri)
     authUrl.searchParams.set("scope", OAUTH_SCOPES.INSTAGRAM)
     authUrl.searchParams.set("response_type", "code")
     authUrl.searchParams.set("state", state)
@@ -208,21 +224,21 @@ export class OAuthService {
     redirectUri: string,
     codeChallenge: string
   ): string {
-    // 1) Collapse any “//” in the path portion of the URI to a single “/”
-    const normalizeRedirect = redirectUri.replace(/([^:]\/)\/+/g, '$1');
+    // Normalize the redirect URI for compatibility with Vercel deployments
+    const normalizedRedirectUri = normalizeUrl(redirectUri);
 
-    // 2) Define your params in a plain object
+    // Define your params in a plain object
     const params: Record<string, string> = {
       client_id: env.TWITTER_CLIENT_ID,
-      scope: OAUTH_SCOPES.TWITTER,       // e.g. "users.read tweet.read offline.access"
+      scope: OAUTH_SCOPES.TWITTER,
       response_type: 'code',
-      redirect_uri: normalizeRedirect,
+      redirect_uri: normalizedRedirectUri,
       state,
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',
     };
 
-    // 3) Manually build the query string so that encodeURIComponent handles spaces as %20
+    // Manually build the query string so that encodeURIComponent handles spaces as %20
     const queryString = Object.entries(params)
       .map(
         ([key, val]) =>
