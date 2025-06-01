@@ -6,6 +6,10 @@ import { withAuth } from "@/lib/middleware"
 import { logger } from "@/lib/logger"
 import { z } from "zod"
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
+
 const requestSchema = z.object({
   includeTweets: z.boolean().optional().default(true),
   includeMentions: z.boolean().optional().default(true),

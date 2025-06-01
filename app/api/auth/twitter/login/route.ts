@@ -6,6 +6,10 @@ import { env } from "@/lib/config";
 import { withRateLimit, withErrorHandling } from "@/lib/middleware";
 import { logger } from "@/lib/logger";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
+
 async function handler(request: NextRequest): Promise<NextResponse> {
   const state         = generateState();
   const codeVerifier  = generateCodeVerifier();

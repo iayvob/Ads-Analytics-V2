@@ -4,6 +4,10 @@ import { DashboardService } from "@/lib/dashboard-service"
 import { withAuth } from "@/lib/middleware"
 import { logger } from "@/lib/logger"
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
+
 interface RouteParams {
   params: {
     platform: "facebook" | "instagram" | "twitter"

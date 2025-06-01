@@ -5,6 +5,10 @@ import { OAuthService } from "@/lib/oauth-service"
 import { env } from "@/lib/config"
 import { withErrorHandling } from "@/lib/middleware"
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
+
 export const GET = withErrorHandling(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url)

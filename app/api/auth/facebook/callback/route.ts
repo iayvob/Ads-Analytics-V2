@@ -7,6 +7,10 @@ import { env } from "@/lib/config"
 import { logger } from "@/lib/logger"
 import { withErrorHandling } from "@/lib/middleware"
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
+
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url)
   const params = {

@@ -3,6 +3,10 @@ import { getSession } from "@/lib/session"
 import { UserService } from "@/lib/user-service"
 import { withErrorHandling } from "@/lib/middleware"
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
+
 export const GET = withErrorHandling(async (request: NextRequest) => {
   try {
     const session = await getSession(request)

@@ -1,8 +1,11 @@
-// filepath: d:\freelance\adinsights_frontend\app\api\user\profile\route.ts
 import { type NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { UserService } from "@/lib/user-service"
 import { withAuth } from "@/lib/middleware"
+
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
 
 export const GET = withAuth(async (request: NextRequest) => {
   const session = await getSession(request)

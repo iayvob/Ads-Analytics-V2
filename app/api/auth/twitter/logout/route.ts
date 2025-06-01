@@ -2,6 +2,10 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getSession, setSession } from "@/lib/session"
 import { env } from "@/lib/config"
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession(request)
