@@ -3,8 +3,10 @@ import { generateState, generateCodeVerifier, generateCodeChallenge } from "@/li
 import { getSession, setSession } from "@/lib/session";
 import { OAuthService } from "@/lib/oauth-service";
 import { env } from "@/lib/config";
+import { withRateLimit, withErrorHandling } from "@/lib/middleware";
+import { logger } from "@/lib/logger";
 
-export async function POST(request: NextRequest) {
+async function handler(request: NextRequest): Promise<NextResponse> {
   const state         = generateState();
   const codeVerifier  = generateCodeVerifier();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
@@ -15,9 +17,13 @@ export async function POST(request: NextRequest) {
   const session      = { ...existingSession, state, codeChallenge, codeVerifier };
 
   const authUrl = OAuthService.buildTwitterAuthUrl(state, redirectUri, codeChallenge);
+  
+  logger.info("Twitter auth initiated", { state });
 
   const response = NextResponse.json({ authUrl });
   await setSession(request, session, response);
 
   return response;
 }
+
+export const POST = withRateLimit(withErrorHandling(handler));

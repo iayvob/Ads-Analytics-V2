@@ -5,8 +5,9 @@ import { OAuthService } from "@/lib/oauth-service"
 import { AuthError } from "@/lib/errors"
 import { env } from "@/lib/config"
 import { logger } from "@/lib/logger"
+import { withErrorHandling } from "@/lib/middleware"
 
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandling(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url)
   const params = {
     code: searchParams.get("code"),
@@ -100,4 +101,4 @@ export async function GET(request: NextRequest) {
     await setSession(request, updatedSession, response)
   
     return response
-  }
+  })

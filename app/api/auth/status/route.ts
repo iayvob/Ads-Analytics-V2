@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { UserService } from "@/lib/user-service"
+import { withErrorHandling } from "@/lib/middleware"
 
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandling(async (request: NextRequest) => {
   try {
     const session = await getSession(request)
 
@@ -82,4 +83,4 @@ export async function GET(request: NextRequest) {
     console.error("Error checking auth status:", error)
     return NextResponse.json({ error: "Failed to check authentication status" }, { status: 500 })
   }
-}
+})

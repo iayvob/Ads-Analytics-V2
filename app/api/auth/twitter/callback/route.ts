@@ -3,8 +3,9 @@ import { getSession, setSession } from "@/lib/session"
 import { UserService } from "@/lib/user-service"
 import { OAuthService } from "@/lib/oauth-service"
 import { env } from "@/lib/config"
+import { withErrorHandling } from "@/lib/middleware"
 
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandling(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url)
     const code = searchParams.get("code")
@@ -83,4 +84,4 @@ export async function GET(request: NextRequest) {
     console.error("Twitter callback error:", error)
     return NextResponse.redirect(`${env.APP_URL}?error=twitter_callback_failed`)
   }
-}
+})

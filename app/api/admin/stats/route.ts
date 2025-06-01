@@ -1,12 +1,9 @@
+// filepath: d:\freelance\adinsights_frontend\app\api\admin\stats\route.ts
 import { type NextRequest, NextResponse } from "next/server"
 import { UserService } from "@/lib/user-service"
+import { withAuth, withErrorHandling } from "@/lib/middleware"
 
-export async function GET(request: NextRequest) {
-  try {
-    const stats = await UserService.getUserStats()
-    return NextResponse.json(stats)
-  } catch (error) {
-    console.error("Error fetching stats:", error)
-    return NextResponse.json({ error: "Failed to fetch statistics" }, { status: 500 })
-  }
-}
+export const GET = withAuth(withErrorHandling(async (request: NextRequest) => {
+  const stats = await UserService.getUserStats()
+  return NextResponse.json(stats)
+}))
